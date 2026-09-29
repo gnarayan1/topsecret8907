@@ -13,6 +13,7 @@ public class ConfigFile {
 
     public static double loopTime = 0.005; //5 msec
     public static double DEADZONE = 50;
+    public static double CLOSE_ERROR_THRESHOLD = 150;
 
     public static double SERVO_POS_DOWN = 0.9;
     public static double SERVO_POS_MID = 0.505;
