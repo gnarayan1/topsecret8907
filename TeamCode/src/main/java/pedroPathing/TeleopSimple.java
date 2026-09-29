@@ -39,7 +39,8 @@ public class TeleopSimple extends OpMode {
     private ElapsedTime revolverTimer = new ElapsedTime();
 
     private double kP, kI, kD;
-    private double error;
+    private double launcherError;
+    private double revolverError;
     private double integralSum = 0;
     private double lastError = 0;
     private double pidOutput = 0;
@@ -50,8 +51,8 @@ public class TeleopSimple extends OpMode {
 
     private double revolverLastError = 0;
     private boolean prevRightBumper = false;
-    private boolean prevLeftTrigger = false;
-    private boolean prevRightTrigger = false;
+    private boolean prevDpadLeft = false;
+    private boolean prevDpadRight = false;
     private boolean prevLeftStickButton = false;
     private boolean prevRightStickButton = false;
 
@@ -76,6 +77,7 @@ public class TeleopSimple extends OpMode {
         revolver.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         revolver.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         revolver.setPower(0);
+        revolverTimer.reset();
     }
 
     @Override
@@ -89,15 +91,15 @@ public class TeleopSimple extends OpMode {
     }
 
     private double runPIDFHybrid(double target, double current, double currentPower) {
-        error = target - current;
+        launcherError = target - current;
 
-        if (Math.abs(error) > DEADZONE) {
-            integralSum += error * loopTime;
+        if (Math.abs(launcherError) > DEADZONE) {
+            integralSum += launcherError * loopTime;
         }
 
-        double derivative = (error - lastError) / loopTime;
-        double pidCorrection = (kP * error) + (kI * integralSum) + (kD * derivative);
-        lastError = error;
+        double derivative = (launcherError - lastError) / loopTime;
+        double pidCorrection = (kP * launcherError) + (kI * integralSum) + (kD * derivative);
+        lastError = launcherError;
 
         return currentPower + pidCorrection;
     }
@@ -108,12 +110,12 @@ public class TeleopSimple extends OpMode {
         if (dt <= 0) return;
 
         double currentTicks = revolver.getCurrentPosition();
-        double error = targetTicks - currentTicks;
+        revolverError = targetTicks - currentTicks;
 
         double pGain;
         double dGain;
 
-        if (Math.abs(error) > REV_CLOSE_THRESHOLD) {
+        if (Math.abs(revolverError) > REV_CLOSE_THRESHOLD) {
             pGain = REVkP;
             dGain = REVkD;
         } else {
@@ -121,10 +123,10 @@ public class TeleopSimple extends OpMode {
             dGain = REVkDClose;
         }
 
-        double derivative = (error - revolverLastError) / dt;
-        revolverLastError = error;
+        double derivative = (revolverError - revolverLastError) / dt;
+        revolverLastError = revolverError;
 
-        double power = (pGain * error) + (dGain * derivative);
+        double power = (pGain * revolverError) + (dGain * derivative);
         power = clamp(power, -1.0, 1.0);
 
         revolver.setPower(power);
@@ -133,9 +135,8 @@ public class TeleopSimple extends OpMode {
     @Override
     public void loop() {
         double currentVelocity = launcher.getVelocity();
-        error = targetVelocity - currentVelocity;
 
-        if (Math.abs(error) > CLOSE_ERROR_THRESHOLD) {
+        if (Math.abs(targetVelocity - currentVelocity) > CLOSE_ERROR_THRESHOLD) {
             kP = CONFIGkP;
             kI = CONFIGkI;
             kD = CONFIGkD;
@@ -159,11 +160,11 @@ public class TeleopSimple extends OpMode {
 
         PidInputSpeed = clamp(PidInputSpeed, 0.0, 1.0);
 
-        if (gamepad1.left_trigger > 0.1 && !prevLeftTrigger) {
+        if (gamepad1.dpad_left && !prevDpadLeft) {
             targetTicks -= TICK_STEP;
         }
 
-        if (gamepad1.right_trigger > 0.1 && !prevRightTrigger) {
+        if (gamepad1.dpad_right && !prevDpadRight) {
             targetTicks += TICK_STEP;
         }
 
@@ -182,9 +183,10 @@ public class TeleopSimple extends OpMode {
             pidOutput = 0;
             integralSum = 0;
             lastError = 0;
+            launcherError = 0;
         }
 
-        revolverSpin((int) targetTicks);
+        revolverSpin(targetTicks);
 
         if (!follower.isBusy()) {
             follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x * 0.5, true);
@@ -195,15 +197,16 @@ public class TeleopSimple extends OpMode {
         telemetry.addData("Launcher Target", targetVelocity);
         telemetry.addData("Launcher Speed", currentVelocity);
         telemetry.addData("Launcher Input %", PidInputSpeed);
+        telemetry.addData("Launcher Error", launcherError);
         telemetry.addData("Revolver Target Ticks", targetTicks);
-        telemetry.addData("Revolver Error", error);
+        telemetry.addData("Revolver Error", revolverError);
         telemetry.addData("X", follower.getPose().getX());
         telemetry.addData("Y", follower.getPose().getY());
         telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
 
         prevRightBumper = gamepad1.right_bumper;
-        prevLeftTrigger = gamepad1.left_trigger > 0.1;
-        prevRightTrigger = gamepad1.right_trigger > 0.1;
+        prevDpadLeft = gamepad1.dpad_left;
+        prevDpadRight = gamepad1.dpad_right;
         prevLeftStickButton = gamepad1.left_stick_button;
         prevRightStickButton = gamepad1.right_stick_button;
 
