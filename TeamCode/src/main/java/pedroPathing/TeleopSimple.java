@@ -13,6 +13,9 @@ import static pedroPathing.Config.ConfigFile.REVkD;
 import static pedroPathing.Config.ConfigFile.REVkDClose;
 import static pedroPathing.Config.ConfigFile.REVkP;
 import static pedroPathing.Config.ConfigFile.REVkPClose;
+import static pedroPathing.Config.ConfigFile.SERVO_POS_DOWN;
+import static pedroPathing.Config.ConfigFile.SERVO_POS_MID;
+import static pedroPathing.Config.ConfigFile.SERVO_POS_UP;
 import static pedroPathing.Config.ConfigFile.TICK_STEP;
 import static pedroPathing.Config.ConfigFile.loopTime;
 
@@ -22,6 +25,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import pedroPathing.constants.FConstants;
@@ -34,6 +38,7 @@ public class TeleopSimple extends OpMode {
     private DcMotorEx launcher;
     private DcMotorEx launcher2;
     private DcMotorEx revolver;
+    private Servo pushServo;
 
     private ElapsedTime pidTimer = new ElapsedTime();
     private ElapsedTime revolverTimer = new ElapsedTime();
@@ -48,6 +53,7 @@ public class TeleopSimple extends OpMode {
     private double targetVelocity = 0;
     private double PidInputSpeed = 0.68;
     private double targetTicks = 0;
+    private double pushServoValue = SERVO_POS_MID;
 
     private double revolverLastError = 0;
     private boolean prevRightBumper = false;
@@ -78,12 +84,14 @@ public class TeleopSimple extends OpMode {
         revolver.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
         revolver.setPower(0);
         revolverTimer.reset();
+        pushServo = hardwareMap.get(Servo.class, "pushServo");
     }
 
     @Override
     public void start() {
         follower.startTeleopDrive();
         launcherOn = true;
+        pushServo.setPosition(SERVO_POS_MID);
     }
 
     private double clamp(double value, double min, double max) {
@@ -187,6 +195,12 @@ public class TeleopSimple extends OpMode {
         }
 
         revolverSpin(targetTicks);
+
+        if (gamepad1.cross) pushServoValue = SERVO_POS_DOWN;
+        else if (gamepad1.square) pushServoValue = SERVO_POS_MID;
+
+        if (gamepad1.triangle) pushServo.setPosition(SERVO_POS_UP);
+        else pushServo.setPosition(pushServoValue);
 
         if (!follower.isBusy()) {
             follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x * 0.5, true);
