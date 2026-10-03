@@ -83,7 +83,7 @@ public class TeleopSimple extends OpMode {
         revolver.setPower(0);
         revolverTimer.reset();
         pushServo = hardwareMap.get(Servo.class, "pushServo");
-        pushServo.setPosition(SERVO_POS_MID);
+        pushServo.setPosition(SERVO_POS_UP);
     }
 
     @Override
@@ -114,6 +114,8 @@ public class TeleopSimple extends OpMode {
         double dt = revolverTimer.seconds();
         revolverTimer.reset();
         if (dt <= 0) return;
+
+         pushServo.setPosition(SERVO_POS_MID);
 
         double currentTicks = revolver.getCurrentPosition();
         revolverError = targetTicks - currentTicks;
