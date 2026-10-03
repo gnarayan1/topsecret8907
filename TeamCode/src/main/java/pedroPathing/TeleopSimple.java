@@ -13,7 +13,6 @@ import static pedroPathing.Config.ConfigFile.REVkD;
 import static pedroPathing.Config.ConfigFile.REVkDClose;
 import static pedroPathing.Config.ConfigFile.REVkP;
 import static pedroPathing.Config.ConfigFile.REVkPClose;
-import static pedroPathing.Config.ConfigFile.SERVO_POS_DOWN;
 import static pedroPathing.Config.ConfigFile.SERVO_POS_MID;
 import static pedroPathing.Config.ConfigFile.SERVO_POS_UP;
 import static pedroPathing.Config.ConfigFile.TICK_STEP;
@@ -53,7 +52,6 @@ public class TeleopSimple extends OpMode {
     private double targetVelocity = 0;
     private double PidInputSpeed = 0.68;
     private double targetTicks = 0;
-    private double pushServoValue = SERVO_POS_MID;
 
     private double revolverLastError = 0;
     private boolean prevRightBumper = false;
@@ -85,13 +83,13 @@ public class TeleopSimple extends OpMode {
         revolver.setPower(0);
         revolverTimer.reset();
         pushServo = hardwareMap.get(Servo.class, "pushServo");
+        pushServo.setPosition(SERVO_POS_MID);
     }
 
     @Override
     public void start() {
         follower.startTeleopDrive();
         launcherOn = true;
-        pushServo.setPosition(SERVO_POS_MID);
     }
 
     private double clamp(double value, double min, double max) {
@@ -196,11 +194,8 @@ public class TeleopSimple extends OpMode {
 
         revolverSpin(targetTicks);
 
-        if (gamepad1.cross) pushServoValue = SERVO_POS_DOWN;
-        else if (gamepad1.square) pushServoValue = SERVO_POS_MID;
-
-        if (gamepad1.triangle) pushServo.setPosition(SERVO_POS_UP);
-        else pushServo.setPosition(pushServoValue);
+        double pushServoCommand = gamepad1.y ? SERVO_POS_UP : SERVO_POS_MID;
+        pushServo.setPosition(pushServoCommand);
 
         if (!follower.isBusy()) {
             follower.setTeleOpMovementVectors(-gamepad1.left_stick_y, -gamepad1.left_stick_x, -gamepad1.right_stick_x * 0.5, true);
@@ -214,6 +209,8 @@ public class TeleopSimple extends OpMode {
         telemetry.addData("Launcher Error", launcherError);
         telemetry.addData("Revolver Target Ticks", targetTicks);
         telemetry.addData("Revolver Error", revolverError);
+        telemetry.addData("Push Servo Y", gamepad1.y);
+        telemetry.addData("Push Servo Command", pushServoCommand);
         telemetry.addData("X", follower.getPose().getX());
         telemetry.addData("Y", follower.getPose().getY());
         telemetry.addData("Heading", Math.toDegrees(follower.getPose().getHeading()));
