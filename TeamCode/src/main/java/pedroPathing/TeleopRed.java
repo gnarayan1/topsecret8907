@@ -44,11 +44,11 @@ public class TeleopRed extends OpMode {
     private DcMotorEx launcher;
     private DcMotorEx launcher2;
     private DcMotorEx revolver;
-    private CRServo intakeServo;
+    //private CRServo intakeServo;
     private Servo pushServo;
     private Follower follower;
     private FtcDashboard dashboard;
-    private Limelight3A limelight;
+   // private Limelight3A limelight;
     private double kP, kI, kD;
     private double error;
 
@@ -92,9 +92,9 @@ public class TeleopRed extends OpMode {
         follower.setStartingPose(autoEndRed);
         pidTimer.reset();
 
-        limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(4);
-        limelight.start();
+       // limelight = hardwareMap.get(Limelight3A.class, "limelight");
+       // limelight.pipelineSwitch(4);
+       // limelight.start();
 
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         launcher.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -105,8 +105,8 @@ public class TeleopRed extends OpMode {
         launcher2.setMode(DcMotorEx.RunMode.RUN_WITHOUT_ENCODER);
         launcher2.setDirection(DcMotorSimple.Direction.FORWARD);
 
-        intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
-        intakeServo.setDirection(DcMotorSimple.Direction.FORWARD);
+        //intakeServo = hardwareMap.get(CRServo.class, "intakeServo");
+        //intakeServo.setDirection(DcMotorSimple.Direction.FORWARD);
 
         pushServo = hardwareMap.get(Servo.class, "pushServo");
 
@@ -251,9 +251,9 @@ public class TeleopRed extends OpMode {
 
         PidInputSpeed = Math.max(-1.0, Math.min(1.0, PidInputSpeed));
 
-        if (gamepad2.dpad_down) intakeServo.setPower(1.0);
-        else if (gamepad2.dpad_up) intakeServo.setPower(-1.0);
-        else if (gamepad2.dpad_left) intakeServo.setPower(0.0);
+        //if (gamepad2.dpad_down) intakeServo.setPower(1.0);
+        //else if (gamepad2.dpad_up) intakeServo.setPower(-1.0);
+        //else if (gamepad2.dpad_left) intakeServo.setPower(0.0);
 
         if (gamepad2.cross) pushServoValue = SERVO_POS_DOWN;
         else if (gamepad2.square) pushServoValue = SERVO_POS_MID;
